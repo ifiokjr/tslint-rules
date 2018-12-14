@@ -1,0 +1,8 @@
+{
+  "extends": ["./base.json", "tslint-react"],
+  "rules": {
+    "jsx-no-lambda": true,
+    "jsx-no-bind": true,
+    "jsx-no-multiline-js": false
+  }
+}

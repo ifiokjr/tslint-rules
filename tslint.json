@@ -1,0 +1,7 @@
+{
+  "extends": "./base.json",
+  "rules": {
+    "file-name-casing": false,
+    "no-parameter-reassignment": false
+  }
+}
