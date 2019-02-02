@@ -2,8 +2,12 @@
   "name": "@kj/tslint-rules",
   "description": "tslint rules used on KickJump projects",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kickjump/tslint-rules.git"
+  },
   "author": "Ifiok Jr. <ifiokotung@gmail.com>",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "main": "main.json",
   "files": [
     "base.json",
@@ -16,8 +20,7 @@
     "tsc": "tsc -p ./tsconfig.json",
     "clean": "rimraf lib",
     "lint": "tslint --project tsconfig.json --config tslint.json",
-    "prepublish": "yarn build",
-    "publish": "npm publish"
+    "prepublish": "yarn build"
   },
   "dependencies": {
     "@types/node": "10.12.21",
