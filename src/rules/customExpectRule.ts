@@ -1,8 +1,8 @@
-import assert from 'assert';
-import { existsSync, readFileSync } from 'fs';
-import { dirname, resolve as resolvePath } from 'path';
-import * as Lint from 'tslint';
-import * as TsType from 'typescript';
+import assert from "assert";
+import { existsSync, readFileSync } from "fs";
+import { dirname, resolve as resolvePath } from "path";
+import * as Lint from "tslint";
+import * as TsType from "typescript";
 
 type Program = TsType.Program;
 type SourceFile = TsType.SourceFile;
@@ -17,29 +17,39 @@ function last<T>(a: ReadonlyArray<T>): T {
 export class Rule extends Lint.Rules.TypedRule {
   /* tslint:disable:object-literal-sort-keys */
   public static metadata: Lint.IRuleMetadata = {
-    ruleName: 'custom-expect',
-    description: 'Asserts types with $ExpectType and presence of errors with $ExpectError.',
-    optionsDescription: 'Not configurable.',
+    ruleName: "custom-expect",
+    description:
+      "Asserts types with $ExpectType and presence of errors with $ExpectError.",
+    optionsDescription: "Not configurable.",
     options: null,
-    type: 'functionality',
+    type: "functionality",
     typescriptOnly: true,
-    requiresTypeInfo: true,
+    requiresTypeInfo: true
   };
   /* tslint:enable:object-literal-sort-keys */
 
-  public static FAILURE_STRING_DUPLICATE_ASSERTION = 'This line has 2 $ExpectType assertions.';
-  public static FAILURE_STRING_ASSERTION_MISSING_NODE = 'Can not match a node to this assertion.';
-  public static FAILURE_STRING_EXPECTED_ERROR = 'Expected an error on this line, but found none.';
+  public static FAILURE_STRING_DUPLICATE_ASSERTION =
+    "This line has 2 $ExpectType assertions.";
+  public static FAILURE_STRING_ASSERTION_MISSING_NODE =
+    "Can not match a node to this assertion.";
+  public static FAILURE_STRING_EXPECTED_ERROR =
+    "Expected an error on this line, but found none.";
 
-  public static FAILURE_STRING(expectedType: string, actualType: string): string {
+  public static FAILURE_STRING(
+    expectedType: string,
+    actualType: string
+  ): string {
     return `Expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
   }
 
-  public applyWithProgram(sourceFile: SourceFile, lintProgram: Program): Lint.RuleFailure[] {
+  public applyWithProgram(
+    sourceFile: SourceFile,
+    lintProgram: Program
+  ): Lint.RuleFailure[] {
     const options = this.ruleArguments[0] as Options | undefined;
     if (!options) {
       return this.applyWithFunction(sourceFile, ctx =>
-        walk(ctx, lintProgram, TsType, 'next', /*nextHigherVersion*/ undefined),
+        walk(ctx, lintProgram, TsType, "next", /*nextHigherVersion*/ undefined)
       );
     }
 
@@ -47,12 +57,12 @@ export class Rule extends Lint.Rules.TypedRule {
 
     const getFailures = (
       { versionName, path }: VersionToTest,
-      nextHigherVersion: string | undefined,
+      nextHigherVersion: string | undefined
     ) => {
       const ts = require(path);
       const program = getProgram(tsconfigPath, ts, versionName, lintProgram);
       return this.applyWithFunction(sourceFile, ctx =>
-        walk(ctx, program, ts, versionName, nextHigherVersion),
+        walk(ctx, program, ts, versionName, nextHigherVersion)
       );
     };
 
@@ -71,7 +81,10 @@ export class Rule extends Lint.Rules.TypedRule {
     // There are no failures in the max version, but there are failures in the min version.
     // Work backward to find the newest version with failures.
     for (let i = versionsToTest.length - 2; i >= 0; i--) {
-      const failures = getFailures(versionsToTest[i], options.versionsToTest[i + 1].versionName);
+      const failures = getFailures(
+        versionsToTest[i],
+        options.versionsToTest[i + 1].versionName
+      );
       if (failures.length) {
         return failures;
       }
@@ -97,7 +110,7 @@ export function getProgram(
   configFile: string,
   ts: typeof TsType,
   versionName: string,
-  lintProgram: Program,
+  lintProgram: Program
 ): Program {
   let versionToProgram = programCache.get(lintProgram);
   if (versionToProgram === undefined) {
@@ -119,14 +132,14 @@ function createProgram(configFile: string, ts: typeof TsType): Program {
   const parseConfigHost: TsType.ParseConfigHost = {
     fileExists: existsSync,
     readDirectory: ts.sys.readDirectory,
-    readFile: file => readFileSync(file, 'utf8'),
-    useCaseSensitiveFileNames: true,
+    readFile: file => readFileSync(file, "utf8"),
+    useCaseSensitiveFileNames: true
   };
   const parsed = ts.parseJsonConfigFileContent(
     config,
     parseConfigHost,
     resolvePath(projectDirectory),
-    { noEmit: true },
+    { noEmit: true }
   );
   const host = ts.createCompilerHost(parsed.options, true);
   return ts.createProgram(parsed.fileNames, parsed.options, host);
@@ -137,7 +150,7 @@ function walk(
   program: Program,
   ts: typeof TsType,
   versionName: string,
-  nextHigherVersion: string | undefined,
+  nextHigherVersion: string | undefined
 ): void {
   const { fileName } = ctx.sourceFile;
   const sourceFile = program.getSourceFile(fileName)!;
@@ -148,7 +161,7 @@ function walk(
       `Program source files differ between TypeScript versions. This may be a dtslint bug.\n` +
         `Expected to find a file '${fileName}' present in ${
           TsType.version
-        }, but did not find it in ts@${versionName}.`,
+        }, but did not find it in ts@${versionName}.`
     );
     return;
   }
@@ -157,7 +170,10 @@ function walk(
   // Don't care about emit errors.
   const diagnostics = ts.getPreEmitDiagnostics(program, sourceFile);
 
-  if (sourceFile.isDeclarationFile || !/\$Expect(Type|Error)/.test(sourceFile.text)) {
+  if (
+    sourceFile.isDeclarationFile ||
+    !/\$Expect(Type|Error)/.test(sourceFile.text)
+  ) {
     // Normal file.
     for (const diagnostic of diagnostics) {
       addDiagnosticFailure(diagnostic);
@@ -165,7 +181,9 @@ function walk(
     return;
   }
 
-  const { errorLines, typeAssertions, duplicates } = parseAssertions(sourceFile);
+  const { errorLines, typeAssertions, duplicates } = parseAssertions(
+    sourceFile
+  );
 
   for (const line of duplicates) {
     addFailureAtLine(line, Rule.FAILURE_STRING_DUPLICATE_ASSERTION);
@@ -191,7 +209,7 @@ function walk(
     sourceFile,
     typeAssertions,
     checker,
-    ts,
+    ts
   );
   for (const { node, expected, actual } of unmetExpectations) {
     ctx.addFailureAtNode(node, Rule.FAILURE_STRING(expected, actual));
@@ -204,7 +222,10 @@ function walk(
   function addDiagnosticFailure(diagnostic: TsType.Diagnostic): void {
     const intro = getIntro();
     if (diagnostic.file === sourceFile) {
-      const msg = `${intro}\n${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`;
+      const msg = `${intro}\n${ts.flattenDiagnosticMessageText(
+        diagnostic.messageText,
+        "\n"
+      )}`;
       ctx.addFailureAt(diagnostic.start!, diagnostic.length!, msg);
     } else {
       ctx.addFailureAt(0, 0, `${intro}\n${fileName}${diagnostic.messageText}`);
@@ -217,8 +238,8 @@ function walk(
     } else {
       const msg = `Compile error in typescript@${versionName} but not in typescript@${nextHigherVersion}.\n`;
       const explain =
-        nextHigherVersion === 'next'
-          ? 'TypeScript@next features not yet supported.'
+        nextHigherVersion === "next"
+          ? "TypeScript@next features not yet supported."
           : `Fix with a comment '// TypeScript Version: ${nextHigherVersion}' just under the header.`;
       return msg + explain;
     }
@@ -226,8 +247,8 @@ function walk(
 
   function addFailureAtLine(line: number, failure: string): void {
     const start = sourceFile.getPositionOfLineAndCharacter(line, 0);
-    let end = start + sourceFile.text.split('\n')[line].length;
-    if (sourceFile.text[end - 1] === '\r') {
+    let end = start + sourceFile.text.split("\n")[line].length;
+    if (sourceFile.text[end - 1] === "\r") {
       end--;
     }
     ctx.addFailure(start, end, `TypeScript@${versionName}: ${failure}`);
@@ -265,7 +286,7 @@ function parseAssertions(sourceFile: SourceFile): Assertions {
       continue;
     }
     const line = getLine(commentMatch.index);
-    if (match[1] === 'Error') {
+    if (match[1] === "Error") {
       if (errorLines.has(line)) {
         duplicates.push(line);
       }
@@ -290,13 +311,15 @@ function parseAssertions(sourceFile: SourceFile): Assertions {
     }
     // If this is the first token on the line, it applies to the next line.
     // Otherwise, it applies to the text to the left of it.
-    return isFirstOnLine(text, lineStarts[curLine], pos) ? curLine + 1 : curLine;
+    return isFirstOnLine(text, lineStarts[curLine], pos)
+      ? curLine + 1
+      : curLine;
   }
 }
 
 function isFirstOnLine(text: string, lineStart: number, pos: number): boolean {
   for (let i = lineStart; i < pos; i++) {
-    if (text[i] !== ' ') {
+    if (text[i] !== " ") {
       return false;
     }
   }
@@ -318,7 +341,7 @@ function getExpectTypeFailures(
   sourceFile: SourceFile,
   typeAssertions: Map<number, string>,
   checker: TsType.TypeChecker,
-  ts: typeof TsType,
+  ts: typeof TsType
 ): ExpectTypeFailures {
   const unmetExpectations: Array<{
     node: TsType.Node;
@@ -342,9 +365,9 @@ function getExpectTypeFailures(
         ? checker.typeToString(
             type,
             /*enclosingDeclaration*/ undefined,
-            ts.TypeFormatFlags.NoTruncation,
+            ts.TypeFormatFlags.NoTruncation
           )
-        : '';
+        : "";
       if (actual !== expected) {
         unmetExpectations.push({ node, expected, actual });
       }
@@ -357,11 +380,14 @@ function getExpectTypeFailures(
   return { unmetExpectations, unusedAssertions: typeAssertions.keys() };
 }
 
-function getNodeForExpectType(node: TsType.Node, ts: typeof TsType): TsType.Node {
+function getNodeForExpectType(
+  node: TsType.Node,
+  ts: typeof TsType
+): TsType.Node {
   if (node.kind === ts.SyntaxKind.VariableStatement) {
     // ts2.0 doesn't have `isVariableStatement`
     const {
-      declarationList: { declarations },
+      declarationList: { declarations }
     } = node as TsType.VariableStatement;
     if (declarations.length === 1) {
       const { initializer } = declarations[0];

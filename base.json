@@ -1,15 +1,16 @@
 {
   "extends": [
-    "./main.json",
     "tslint:latest",
     "tslint-eslint-rules",
     "tslint-config-prettier",
     "tslint-plugin-prettier",
     "tslint-no-circular-imports",
-    "tslint-etc",
+    "tslint-consistent-codestyle",
     "rxjs-tslint-rules"
   ],
+  "rulesDirectory": "./lib/rules",
   "rules": {
+    "no-unused": [true, "unused-catch-binding"],
     "ban": false,
     "class-name": true,
     "prettier": true,
@@ -30,10 +31,19 @@
     "no-any": true,
     "no-arg": true,
     "no-bitwise": true,
-    "no-console": [true, "log", "error", "debug", "info", "time", "timeEnd", "trace"],
+    "no-console": [
+      true,
+      "log",
+      "error",
+      "debug",
+      "info",
+      "time",
+      "timeEnd",
+      "trace"
+    ],
     "no-construct": true,
     "no-debugger": true,
-    "no-empty": [true, "allow-empty-catch"],
+    "no-empty": [true, "allow-empty-catch", "allow-empty-functions"],
     "no-eval": true,
     "no-shadowed-variable": true,
     "no-string-literal": true,
@@ -84,10 +94,8 @@
     "prefer-const": {
       "severity": "warning"
     },
-    "prefer-object-spread": false,
-    "custom-no-implicit-dependencies": true,
-    "no-implicit-dependencies": false,
-    "no-unused-declaration": true,
+    "prefer-object-spread": true,
+    "no-implicit-dependencies": true,
     "file-name-casing": [true, "kebab-case"],
     "rxjs-finnish": {
       "options": [

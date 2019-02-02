@@ -3,7 +3,7 @@
   "description": "tslint rules used on KickJump projects",
   "license": "MIT",
   "author": "Ifiok Jr. <ifiokotung@gmail.com>",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "main": "main.json",
   "files": [
     "base.json",
@@ -12,30 +12,34 @@
     "react.json"
   ],
   "scripts": {
-    "build": "run-s build:* lint",
-    "build:tsc": "tsc -p ./tsconfig.json",
+    "build": "yarn run clean && yarn run tsc && yarn run lint",
+    "tsc": "tsc -p ./tsconfig.json",
     "clean": "rimraf lib",
-    "dev": "run-p watch:*",
     "lint": "tslint --project tsconfig.json --config tslint.json",
-    "typecheck": "tsc -p ./tsconfig.json --noEmit",
-    "watch:tsc": "tsc -p ./tsconfig.json --watch"
+    "prepublish": "yarn build",
+    "publish": "npm publish"
   },
   "dependencies": {
+    "@types/node": "10.12.21",
     "builtin-modules": "3.0.0",
     "rxjs-tslint": "0.1.5",
     "rxjs-tslint-rules": "4.13.0",
     "tslint-config-prettier": "1.16.0",
     "tslint-eslint-rules": "5.4.0",
-    "tslint-etc": "1.2.8",
     "tslint-no-circular-imports": "0.6.1",
     "tslint-plugin-prettier": "2.0.1",
+    "tslint-consistent-codestyle": "1.15.0",
     "tslint-react": "3.6.0",
     "tsutils": "3.5.2"
   },
   "peerDependencies": {
-    "prettier": "^1.15.3",
-    "tslint": "^5.11.0",
+    "prettier": "^1.16.3",
+    "tslint": "5.12.0",
     "typescript": "^3.2.0"
+  },
+  "devDependencies": {
+    "prettier": "1.16.3",
+    "typescript": "3.3.1"
   },
   "types": "lib/index.d.ts"
 }
